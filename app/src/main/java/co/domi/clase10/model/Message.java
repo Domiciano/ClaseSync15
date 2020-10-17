@@ -4,14 +4,16 @@ public class Message {
     private String id;
     private String body;
     private String authorID;
+    private long timestamp;
 
     public Message() {
     }
 
-    public Message(String id, String body, String authorID) {
+    public Message(String id, String body, String authorID, long timestamp) {
         this.id = id;
         this.body = body;
         this.authorID = authorID;
+        this.timestamp = timestamp;
     }
 
     public String getId() {
@@ -36,5 +38,13 @@ public class Message {
 
     public void setAuthorID(String authorID) {
         this.authorID = authorID;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 }

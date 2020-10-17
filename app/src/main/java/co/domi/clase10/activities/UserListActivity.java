@@ -14,16 +14,22 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 
-public class UserListActivity extends AppCompatActivity implements OnUserListListener, AdapterView.OnItemClickListener {
+public class UserListActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
 
     private User myUser;
     private ListView userList;
     private ArrayAdapter<User> userArrayAdapter;
     private ArrayList<User> users;
-    private Actions actions;
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,26 +42,28 @@ public class UserListActivity extends AppCompatActivity implements OnUserListLis
         userList.setAdapter(userArrayAdapter);
         //Recuperar el user de la actividad pasada
         myUser = (User) getIntent().getExtras().getSerializable("myUser");
-        //Generar el objeto action para poder obtener la lista de usuarios
-        actions = new Actions();
-        actions.onUserListListener(this);
-        actions.getAllUsers();
-        //Habilitar los clicks a items de la lista
-        userList.setOnItemClickListener(this);
-    }
+        //Listar usuarios
+        db = FirebaseFirestore.getInstance();
 
-    //Se activa cuando terminamos de bajar los usuarios de Firebase
-    @Override
-    public void onGetUsers(ArrayList<User> userList) {
-        runOnUiThread(
-                ()->{
+        Query userReference = db.collection("users").orderBy("username").limit(10);
+        userReference.get().addOnCompleteListener(
+                task -> {
                     users.clear();
-                    users.addAll(userList);
+                    for(QueryDocumentSnapshot doc : task.getResult()){
+                        User user = doc.toObject(User.class);
+                        users.add(user);
+                    }
                     userArrayAdapter.notifyDataSetChanged();
                 }
         );
 
+
+
+        //Habilitar los clicks a items de la lista
+        userList.setOnItemClickListener(this);
     }
+
+
 
     //Se activa cuando damos click a un item de la lista
     @Override
