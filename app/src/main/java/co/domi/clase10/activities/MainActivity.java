@@ -5,7 +5,9 @@ import co.domi.clase10.R;
 import co.domi.clase10.comm.Actions;
 import co.domi.clase10.events.OnRegisterListener;
 import co.domi.clase10.model.User;
+import co.domi.clase10.util.NotificationUtil;
 
+import android.app.Notification;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,6 +20,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.UUID;
 
@@ -38,6 +41,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         loginBtn.setOnClickListener(this);
 
         db = FirebaseFirestore.getInstance();
+
+
+
     }
 
     @Override

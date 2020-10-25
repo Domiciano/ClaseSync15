@@ -8,9 +8,11 @@ import co.domi.clase10.model.User;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -19,17 +21,20 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 
-public class UserListActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
+public class UserListActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, View.OnClickListener {
 
     private User myUser;
     private ListView userList;
     private ArrayAdapter<User> userArrayAdapter;
     private ArrayList<User> users;
     private FirebaseFirestore db;
+    private Button logoutBtn;
+    private boolean isLoggingout = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +42,7 @@ public class UserListActivity extends AppCompatActivity implements AdapterView.O
         setContentView(R.layout.activity_user_list);
         //Configuracion de la lista
         userList = findViewById(R.id.userList);
+        logoutBtn = findViewById(R.id.logoutBtn);
         users = new ArrayList<>();
         userArrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, users);
         userList.setAdapter(userArrayAdapter);
@@ -61,9 +67,30 @@ public class UserListActivity extends AppCompatActivity implements AdapterView.O
 
         //Habilitar los clicks a items de la lista
         userList.setOnItemClickListener(this);
+        logoutBtn.setOnClickListener(this);
+
     }
 
 
+    @Override
+    protected void onPause() {
+
+        if(isLoggingout){
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(myUser.getUsername());
+        }else{
+            //Suscribimos a nuestra propia rama
+            FirebaseMessaging.getInstance().subscribeToTopic(myUser.getUsername());
+        }
+
+
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        FirebaseMessaging.getInstance().unsubscribeFromTopic(myUser.getUsername());
+    }
 
     //Se activa cuando damos click a un item de la lista
     @Override
@@ -75,5 +102,15 @@ public class UserListActivity extends AppCompatActivity implements AdapterView.O
         intent.putExtra("userClicked",userClicked);
         
         startActivity(intent);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.logoutBtn:
+                isLoggingout = true;
+                finish();
+                break;
+        }
     }
 }

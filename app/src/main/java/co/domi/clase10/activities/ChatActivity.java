@@ -2,7 +2,10 @@ package co.domi.clase10.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 import co.domi.clase10.R;
+import co.domi.clase10.comm.HTTPSWebUtilDomi;
 import co.domi.clase10.model.ChatRelationship;
+import co.domi.clase10.model.FCMMessage;
+import co.domi.clase10.model.FCMWrapper;
 import co.domi.clase10.model.Message;
 import co.domi.clase10.model.User;
 
@@ -20,6 +23,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.gson.Gson;
 
 import java.util.Collection;
 import java.util.Date;
@@ -118,10 +123,38 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.sendBtn:
+                //Mandar a Firestore
                 String msg = msgET.getText().toString();
                 Message message = new Message(UUID.randomUUID().toString(), msg, myUser.getId(), new Date().getTime());
                 db.collection("chats").document(currentChat.getChatID()).collection("messages").document(message.getId()).set(message);
+
+                //Mandar a FCM
+                new Thread(
+                        ()->{
+                            HTTPSWebUtilDomi utilDomi = new HTTPSWebUtilDomi();
+                            Gson gson = new Gson();
+                            FCMMessage fcmMessage = new FCMMessage(UUID.randomUUID().toString(), msg);
+                            FCMWrapper wrapper = new FCMWrapper("/topics/"+userClicked.getUsername(),fcmMessage);
+                            String json = gson.toJson( wrapper );
+                            utilDomi.POSTtoFCM(json);
+                        }
+                ).start();
+
                 break;
         }
     }
+
+    @Override
+    protected void onPause() {
+        //Suscribimos a nuestra propia rama
+        FirebaseMessaging.getInstance().subscribeToTopic(myUser.getUsername());
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        FirebaseMessaging.getInstance().unsubscribeFromTopic(myUser.getUsername());
+    }
+
 }
